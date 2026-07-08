@@ -1,52 +1,618 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartLLMRouter</title>
+  <meta name="description" content="SmartLLMRouter — 轻量级 macOS 本地 LLM API 代理，支持 42+ 提供商智能路由、自动故障转移与协议转换。Privacy-first, 100% local.">
+  <title>SmartLLMRouter — 智能 LLM API 路由代理</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-deep: #0a0a1a;
+      --bg-card: rgba(255,255,255,0.04);
+      --bg-card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --text-primary: #e8e8f0;
+      --text-secondary: #9090b0;
+      --text-muted: #606080;
+      --accent: #7c5cfc;
+      --accent-glow: rgba(124,92,252,0.3);
+      --accent2: #00d4aa;
+      --accent2-glow: rgba(0,212,170,0.3);
+      --gradient-hero: linear-gradient(135deg, #0a0a1a 0%, #141432 40%, #0d1f2d 70%, #0a0a1a 100%);
+      --gradient-card: linear-gradient(145deg, rgba(124,92,252,0.08) 0%, rgba(0,212,170,0.04) 100%);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      color: #e0e0e0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
     }
-    .logo { font-size: 4rem; margin-bottom: 1rem; }
-    h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(90deg, #a78bfa, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .tagline { font-size: 1.2rem; color: #94a3b8; margin-bottom: 2rem; max-width: 500px; }
-    .buttons { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    a { color: var(--accent); text-decoration: none; transition: var(--transition); }
+    a:hover { color: var(--accent2); }
+    img { max-width: 100%; }
+    code { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 0.9em; }
+
+    /* ========== Grid Background ========== */
+    .grid-bg {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(124,92,252,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,92,252,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 70%);
+    }
+
+    /* ========== Layout ========== */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+    section { padding: 6rem 0; position: relative; }
+
+    /* ========== Nav ========== */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(10,10,26,0.75);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    nav .container { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 2rem; }
+    .nav-brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.15rem; color: var(--text-primary); }
+    .nav-brand .icon { font-size: 1.5rem; }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; }
+    .nav-links a:hover { color: var(--text-primary); }
+    .lang-switch {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+      padding: 0.4rem 0.8rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+      font-weight: 600; transition: var(--transition);
+    }
+    .lang-switch:hover { border-color: var(--accent); color: var(--text-primary); }
+    .lang-switch .active-lang { color: var(--accent); }
+
+    /* ========== Hero ========== */
+    .hero { padding: 10rem 0 6rem; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px;
+      padding: 0.4rem 1rem; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 2rem;
+    }
+    .hero-badge .dot { width: 8px; height: 8px; background: var(--accent2); border-radius: 50%; box-shadow: 0 0 8px var(--accent2-glow); }
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; line-height: 1.15; margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #e8e8f0 0%, #b8b8e0 40%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p {
+      font-size: 1.2rem; color: var(--text-secondary); max-width: 650px; margin: 0 auto 2.5rem;
+    }
+    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
     .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.8rem;
+      border-radius: 100px; font-weight: 600; font-size: 1rem; transition: var(--transition);
+      cursor: pointer; border: none;
     }
-    .btn-primary { background: #7c3aed; color: #fff; }
-    .btn-primary:hover { background: #6d28d9; }
-    .btn-secondary { background: rgba(255,255,255,0.1); color: #c4b5fd; border: 1px solid rgba(255,255,255,0.15); }
-    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
-    footer { margin-top: 3rem; font-size: 0.85rem; color: #64748b; }
-    footer a { color: #818cf8; }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      box-shadow: 0 4px 24px var(--accent-glow);
+    }
+    .btn-primary:hover { background: #9470ff; transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
+    .btn-outline {
+      background: transparent; color: var(--text-secondary); border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--text-primary); background: var(--bg-card); }
+    .btn-ghost {
+      background: transparent; color: var(--accent);
+    }
+    .btn-ghost:hover { color: var(--accent2); }
+
+    /* ========== Stats ========== */
+    .stats { display: flex; justify-content: center; gap: 3rem; margin-top: 4rem; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* ========== Section Headers ========== */
+    .section-header { text-align: center; margin-bottom: 4rem; }
+    .section-badge {
+      display: inline-block; padding: 0.3rem 0.8rem; border-radius: 100px;
+      background: rgba(0,212,170,0.1); color: var(--accent2); font-size: 0.8rem;
+      font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .section-header h2 { font-size: 2.25rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .section-header p { color: var(--text-secondary); max-width: 550px; margin: 0 auto; }
+
+    /* ========== Feature Cards ========== */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .feature-card {
+      background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; transition: var(--transition);
+    }
+    .feature-card:hover { border-color: rgba(124,92,252,0.3); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+    .feature-icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
+    .feature-card h3 { font-size: 1.15rem; margin-bottom: 0.5rem; }
+    .feature-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65; }
+
+    /* ========== Comparison Table ========== */
+    .comparison { overflow-x: auto; }
+    .comparison table { width: 100%; border-collapse: collapse; }
+    .comparison th, .comparison td { padding: 1rem 1.25rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .comparison th { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .comparison tr:first-child td { padding-top: 1.25rem; }
+    .comparison .check { color: var(--accent2); font-weight: 700; }
+    .comparison .cross { color: var(--text-muted); }
+    .comparison .highlight { background: var(--bg-card); border-radius: var(--radius-sm); }
+
+    /* ========== Use Cases ========== */
+    .usecase { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; margin-bottom: 4rem; }
+    .usecase.reverse { direction: rtl; }
+    .usecase.reverse .usecase-content { direction: ltr; }
+    .usecase-number { font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; }
+    .usecase h3 { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .usecase p { color: var(--text-secondary); margin-bottom: 1rem; }
+    .usecase-code {
+      background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 1.25rem; font-size: 0.85rem; overflow-x: auto;
+    }
+    .usecase-graphic {
+      background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; text-align: center; min-height: 200px; display: flex; align-items: center; justify-content: center;
+    }
+    .flow-nodes { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; align-items: center; }
+    .flow-node {
+      padding: 0.5rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;
+    }
+    .flow-node.sender { background: rgba(124,92,252,0.2); color: var(--accent); }
+    .flow-node.proxy { background: rgba(0,212,170,0.2); color: var(--accent2); }
+    .flow-node.provider { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+    .flow-node.error { background: rgba(255,100,100,0.15); color: #ff6b6b; }
+    .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+
+    /* ========== Architecture ========== */
+    .arch-diagram {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2.5rem; overflow-x: auto;
+    }
+    .arch-row { display: flex; gap: 1.5rem; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .arch-box {
+      padding: 0.875rem 1.5rem; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600;
+      text-align: center; min-width: 140px;
+    }
+    .arch-box.client { background: rgba(124,92,252,0.15); border: 1px solid rgba(124,92,252,0.3); color: var(--accent); }
+    .arch-box.proxy { background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.3); color: var(--accent2); }
+    .arch-box.process { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-secondary); }
+    .arch-box.api { background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text-primary); }
+    .arch-arrow { color: var(--text-muted); font-size: 1.5rem; text-align: center; }
+
+    /* ========== CTA ========== */
+    .cta {
+      text-align: center; padding: 5rem 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(124,92,252,0.12) 0%, transparent 70%);
+    }
+    .cta h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+    .cta p { color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem; }
+
+    /* ========== Footer ========== */
+    footer {
+      border-top: 1px solid var(--border); padding: 3rem 0;
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+    footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .footer-links { display: flex; gap: 1.5rem; }
+
+    /* ========== Responsive ========== */
+    @media (max-width: 768px) {
+      .usecase { grid-template-columns: 1fr; }
+      .usecase.reverse { direction: ltr; }
+      .stats { gap: 1.5rem; }
+      .stat-value { font-size: 2rem; }
+      nav .nav-links { display: none; }
+      footer .container { flex-direction: column; text-align: center; }
+    }
+
+    /* ========== Animations ========== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate { animation: fadeUp 0.6s ease-out both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
   </style>
 </head>
 <body>
-  <div class="logo">🧠</div>
-  <h1>SmartLLMRouter</h1>
-  <p class="tagline">A lightweight macOS proxy that distributes LLM API requests across multiple providers with intelligent routing.</p>
-  <div class="buttons">
-    <a href="https://github.com/SmartLLMRouter/SmartLLMRouter" class="btn btn-primary">View on GitHub</a>
-    <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/releases/latest" class="btn btn-secondary">Download Latest</a>
+<div class="grid-bg"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="container">
+    <div class="nav-brand"><span class="icon">⚡</span> SmartLLMRouter</div>
+    <div class="nav-links">
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#why" data-i18n="nav.why">Why Us</a>
+      <a href="#usecases" data-i18n="nav.usecases">Use Cases</a>
+      <a href="#architecture" data-i18n="nav.arch">Architecture</a>
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter" data-i18n="nav.github">GitHub</a>
+    </div>
+    <button class="lang-switch" onclick="toggleLang()" id="langBtn">
+      <span class="active-lang" id="langZh">中</span> / <span id="langEn">EN</span>
+    </button>
   </div>
-  <footer>
-    <p>© 2025–2026 <a href="https://github.com/SmartLLMRouter">SmartLLMRouter</a></p>
-  </footer>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge animate"><span class="dot"></span> <span data-i18n="hero.badge">macOS Native · 42+ Providers · 100% Local</span></div>
+    <h1 class="animate delay-1" data-i18n="hero.title">Smart LLM API Router</h1>
+    <p class="animate delay-2" data-i18n="hero.subtitle">A lightweight macOS menu bar proxy that intelligently routes LLM API requests across 42+ providers with automatic failover, protocol conversion, and real-time usage analytics — all running locally on your Mac.</p>
+    <div class="hero-buttons animate delay-3">
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/releases/latest" class="btn btn-primary">⬇ <span data-i18n="hero.download">Download for macOS</span></a>
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter" class="btn btn-outline"><span data-i18n="hero.github">View on GitHub</span> →</a>
+    </div>
+    <div class="stats animate delay-3">
+      <div class="stat"><div class="stat-value">42+</div><div class="stat-label" data-i18n="stat.providers">LLM Providers</div></div>
+      <div class="stat"><div class="stat-value">~8MB</div><div class="stat-label" data-i18n="stat.size">Native Binary</div></div>
+      <div class="stat"><div class="stat-value">100%</div><div class="stat-label" data-i18n="stat.privacy">Local & Private</div></div>
+      <div class="stat"><div class="stat-value">&lt;1ms</div><div class="stat-label" data-i18n="stat.latency">Proxy Overhead</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge" data-i18n="features.badge">Core Features</div>
+      <h2 data-i18n="features.title">Everything You Need in One Proxy</h2>
+      <p data-i18n="features.subtitle">SmartLLMRouter replaces multiple tools with a single, lightweight native app.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🔄</span>
+        <h3 data-i18n="features.failover.title">Smart Auto-Failover</h3>
+        <p data-i18n="features.failover.desc">Priority-based routing with intelligent cooldown — handles 429/5xx/401 errors silently. Three-layer fallback ensures your request never fails.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔀</span>
+        <h3 data-i18n="features.protocol.title">Protocol Adapter</h3>
+        <p data-i18n="features.protocol.desc">Seamless conversion between Anthropic and OpenAI formats. Use Claude Code with OpenAI-compatible providers, or vice versa.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <h3 data-i18n="features.stats.title">Real-time Analytics</h3>
+        <p data-i18n="features.stats.desc">Track daily token usage and estimated costs with 30-day history. Know exactly where your API budget goes.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔐</span>
+        <h3 data-i18n="features.privacy.title">Privacy First</h3>
+        <p data-i18n="features.privacy.desc">100% local execution. API keys stored in macOS Keychain. No telemetry, no cloud sync, no third-party servers.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📦</span>
+        <h3 data-i18n="features.providers.title">42+ Providers Built-in</h3>
+        <p data-i18n="features.providers.desc">Pre-configured metadata for DeepSeek, OpenAI, Anthropic, Aliyun, MiniMax, and more. One-click setup via providers.json.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <h3 data-i18n="features.zero.title">Zero Client Config</h3>
+        <p data-i18n="features.zero.desc">Just set ANTHROPIC_BASE_URL. Claude Code and other clients work out of the box — no plugins, no wrappers, no config files.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why Us -->
+<section id="why">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge" data-i18n="why.badge">Why SmartLLMRouter</div>
+      <h2 data-i18n="why.title">Not Just Another Proxy</h2>
+      <p data-i18n="why.subtitle">See how SmartLLMRouter compares to other solutions.</p>
+    </div>
+    <div class="comparison">
+      <table>
+        <thead>
+          <tr><th></th><th class="highlight" data-i18n="why.col.slr">SmartLLMRouter</th><th data-i18n="why.col.cloud">Cloud Proxies</th><th data-i18n="why.col.oss">Other OSS</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-i18n="why.row.size">Binary Size</td><td class="highlight check">~8 MB</td><td class="cross">100+ MB</td><td class="cross">50+ MB</td></tr>
+          <tr><td data-i18n="why.row.native">macOS Native</td><td class="highlight check">✓ SwiftUI</td><td class="cross">Web UI</td><td class="cross">Electron/CLI</td></tr>
+          <tr><td data-i18n="why.row.privacy">Privacy</td><td class="highlight check">100% Local</td><td class="cross">Cloud Relayed</td><td class="cross">Partial</td></tr>
+          <tr><td data-i18n="why.row.failover">Auto-Failover</td><td class="highlight check">3-Layer</td><td class="check">Limited</td><td class="cross">Manual</td></tr>
+          <tr><td data-i18n="why.row.protocol">Protocol Conversion</td><td class="highlight check">✓ Built-in</td><td class="check">Partial</td><td class="cross">No</td></tr>
+          <tr><td data-i18n="why.row.keys">Key Storage</td><td class="highlight check">Keychain</td><td class="cross">Server-side</td><td class="check">Config file</td></tr>
+          <tr><td data-i18n="why.row.setup">Setup Time</td><td class="highlight check">&lt; 1 min</td><td class="cross">10+ min</td><td class="cross">5+ min</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Use Cases -->
+<section id="usecases">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge" data-i18n="usecases.badge">Use Cases</div>
+      <h2 data-i18n="usecases.title">Built for Real Workflows</h2>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-content">
+        <div class="usecase-number">01</div>
+        <h3 data-i18n="usecase.1.title">Claude Code × Multi-Provider</h3>
+        <p data-i18n="usecase.1.desc">Use multiple API keys for the same model. When DeepSeek hits rate limits, the proxy silently switches to Nvidia or Sensenova — same model, different provider.</p>
+        <div class="usecase-code"><code>export ANTHROPIC_BASE_URL=http://localhost:1897<br>claude</code></div>
+      </div>
+      <div class="usecase-graphic">
+        <div class="flow-nodes">
+          <span class="flow-node sender">Claude Code</span><span class="flow-arrow">→</span>
+          <span class="flow-node proxy">Proxy :1897</span><span class="flow-arrow">→</span>
+          <span class="flow-node provider">DeepSeek</span>
+          <span class="flow-node provider">Nvidia</span>
+          <span class="flow-node provider">Sensenova</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="usecase reverse">
+      <div class="usecase-graphic">
+        <div class="flow-nodes">
+          <span class="flow-node error">429 Rate Limited</span><span class="flow-arrow">→</span>
+          <span class="flow-node proxy">Circuit Breaker</span><span class="flow-arrow">→</span>
+          <span class="flow-node provider">Next Provider</span>
+        </div>
+      </div>
+      <div class="usecase-content">
+        <div class="usecase-number">02</div>
+        <h3 data-i18n="usecase.2.title">Rate Limit Failover</h3>
+        <p data-i18n="usecase.2.desc">When a provider returns 429, the circuit breaker trips and the request automatically retries with the next priority provider. You see no interruption.</p>
+      </div>
+    </div>
+
+    <div class="usecase">
+      <div class="usecase-content">
+        <div class="usecase-number">03</div>
+        <h3 data-i18n="usecase.3.title">Context Length Fallback</h3>
+        <p data-i18n="usecase.3.desc">When a request exceeds a model's context window, SmartLLMRouter intelligently routes to a compatible model with larger capacity — like from gpt-4o (128K) to gpt-4.1 (1M).</p>
+      </div>
+      <div class="usecase-graphic">
+        <div class="flow-nodes">
+          <span class="flow-node sender">200K tokens</span><span class="flow-arrow">→</span>
+          <span class="flow-node error">gpt-4o: 128K ✗</span><span class="flow-arrow">→</span>
+          <span class="flow-node proxy">gpt-4.1: 1M ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="usecase reverse">
+      <div class="usecase-graphic">
+        <div class="flow-nodes">
+          <span class="flow-node provider">Ollama</span><span class="flow-arrow">+</span>
+          <span class="flow-node provider">Cloud APIs</span><span class="flow-arrow">→</span>
+          <span class="flow-node proxy">Unified :1897</span>
+        </div>
+      </div>
+      <div class="usecase-content">
+        <div class="usecase-number">04</div>
+        <h3 data-i18n="usecase.4.title">Local + Cloud Hybrid</h3>
+        <p data-i18n="usecase.4.desc">Run local models (Ollama, vLLM) alongside cloud APIs. SmartLLMRouter unifies them behind a single endpoint — one URL serves all models.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Architecture -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge" data-i18n="arch.badge">Architecture</div>
+      <h2 data-i18n="arch.title">How It Works</h2>
+    </div>
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box client">Claude Code / OpenAI SDK</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box proxy">SmartLLM Proxy :1897</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box process">Protocol Detection</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box process">Model Matching</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box process">3-Layer Fallback</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box process">Protocol Conversion</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box api">DeepSeek</div>
+        <div class="arch-box api">OpenAI</div>
+        <div class="arch-box api">Anthropic</div>
+        <div class="arch-box api">Aliyun</div>
+        <div class="arch-box api">MiniMax</div>
+        <div class="arch-box api">…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="container">
+    <h2 data-i18n="cta.title">Ready to Simplify Your LLM Workflow?</h2>
+    <p data-i18n="cta.subtitle">Free · Open Source · macOS 13+ · Apple Silicon &amp; Intel</p>
+    <div class="hero-buttons">
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/releases/latest" class="btn btn-primary">⬇ <span data-i18n="cta.download">Download Latest</span></a>
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter" class="btn btn-ghost"><span data-i18n="cta.github">Star on GitHub</span> ☆</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="nav-brand"><span class="icon">⚡</span> SmartLLMRouter</div>
+    <div class="footer-links">
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter">GitHub</a>
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/releases">Releases</a>
+      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/blob/main/LICENSE">MIT License</a>
+    </div>
+    <span data-i18n="footer.copy">© 2025–2026 SmartLLMRouter</span>
+  </div>
+</footer>
+
+<script>
+const i18n = {
+  zh: {
+    "nav.features": "功能特性",
+    "nav.why": "为什么选我们",
+    "nav.usecases": "使用场景",
+    "nav.arch": "架构",
+    "nav.github": "GitHub",
+    "hero.badge": "macOS 原生 · 42+ 提供商 · 100% 本地",
+    "hero.title": "智能 LLM API 路由代理",
+    "hero.subtitle": "轻量级 macOS 菜单栏代理，智能路由 42+ LLM 提供商的 API 请求，支持自动故障转移、协议转换与实时用量分析 — 全部在 Mac 本地运行。",
+    "hero.download": "下载 macOS 版",
+    "hero.github": "在 GitHub 上查看",
+    "stat.providers": "LLM 提供商",
+    "stat.size": "原生二进制",
+    "stat.privacy": "本地 & 隐私",
+    "stat.latency": "代理延迟",
+    "features.badge": "核心功能",
+    "features.title": "一个代理，全部搞定",
+    "features.subtitle": "SmartLLMRouter 用一个轻量级原生应用替代多个工具。",
+    "features.failover.title": "智能自动故障转移",
+    "features.failover.desc": "基于优先级的路由 + 智能冷却机制，静默处理 429/5xx/401 错误。三层降级策略确保请求永不失败。",
+    "features.protocol.title": "协议适配器",
+    "features.protocol.desc": "Anthropic 与 OpenAI 格式无缝转换。用 Claude Code 调用 OpenAI 兼容提供商，或反向使用。",
+    "features.stats.title": "实时用量分析",
+    "features.stats.desc": "追踪每日 Token 消耗和预估费用，30 天历史记录。清楚了解 API 预算去向。",
+    "features.privacy.title": "隐私优先",
+    "features.privacy.desc": "100% 本地执行。API Key 存储在 macOS 钥匙串中。无遥测、无云同步、无第三方服务器。",
+    "features.providers.title": "内置 42+ 提供商",
+    "features.providers.desc": "预配置 DeepSeek、OpenAI、Anthropic、阿里云、MiniMax 等元数据。一键配置。",
+    "features.zero.title": "零客户端配置",
+    "features.zero.desc": "只需设置 ANTHROPIC_BASE_URL。Claude Code 等客户端开箱即用 — 无需插件、无需包装器、无需配置文件。",
+    "why.badge": "为什么选择 SmartLLMRouter",
+    "why.title": "不仅仅是另一个代理",
+    "why.subtitle": "看看 SmartLLMRouter 与其他方案的对比。",
+    "why.col.slr": "SmartLLMRouter",
+    "why.col.cloud": "云端代理",
+    "why.col.oss": "其他开源方案",
+    "why.row.size": "二进制大小",
+    "why.row.native": "macOS 原生",
+    "why.row.privacy": "隐私",
+    "why.row.failover": "自动故障转移",
+    "why.row.protocol": "协议转换",
+    "why.row.keys": "密钥存储",
+    "why.row.setup": "配置时间",
+    "usecases.badge": "使用场景",
+    "usecases.title": "为真实工作流打造",
+    "usecase.1.title": "Claude Code × 多提供商",
+    "usecase.1.desc": "同一模型使用多个 API Key。当 DeepSeek 触发限流时，代理静默切换到 Nvidia 或 Sensenova — 同一模型，不同提供商。",
+    "usecase.2.title": "限流故障转移",
+    "usecase.2.desc": "当提供商返回 429 时，熔断器触发，请求自动重试下一个优先级提供商。你完全无感知。",
+    "usecase.3.title": "上下文长度回退",
+    "usecase.3.desc": "当请求超过模型上下文窗口时，SmartLLMRouter 智能路由到更大容量的兼容模型 — 如从 gpt-4o (128K) 到 gpt-4.1 (1M)。",
+    "usecase.4.title": "本地 + 云端混合",
+    "usecase.4.desc": "本地模型（Ollama、vLLM）与云端 API 并行运行。SmartLLMRouter 将它们统一到一个端点 — 一个 URL 服务所有模型。",
+    "arch.badge": "架构",
+    "arch.title": "工作原理",
+    "cta.title": "准备好简化你的 LLM 工作流了吗？",
+    "cta.subtitle": "免费 · 开源 · macOS 13+ · Apple Silicon & Intel",
+    "cta.download": "下载最新版",
+    "cta.github": "在 GitHub 上 Star",
+    "footer.copy": "© 2025–2026 SmartLLMRouter"
+  },
+  en: {
+    "nav.features": "Features",
+    "nav.why": "Why Us",
+    "nav.usecases": "Use Cases",
+    "nav.arch": "Architecture",
+    "nav.github": "GitHub",
+    "hero.badge": "macOS Native · 42+ Providers · 100% Local",
+    "hero.title": "Smart LLM API Router",
+    "hero.subtitle": "A lightweight macOS menu bar proxy that intelligently routes LLM API requests across 42+ providers with automatic failover, protocol conversion, and real-time usage analytics — all running locally on your Mac.",
+    "hero.download": "Download for macOS",
+    "hero.github": "View on GitHub",
+    "stat.providers": "LLM Providers",
+    "stat.size": "Native Binary",
+    "stat.privacy": "Local & Private",
+    "stat.latency": "Proxy Overhead",
+    "features.badge": "Core Features",
+    "features.title": "Everything You Need in One Proxy",
+    "features.subtitle": "SmartLLMRouter replaces multiple tools with a single, lightweight native app.",
+    "features.failover.title": "Smart Auto-Failover",
+    "features.failover.desc": "Priority-based routing with intelligent cooldown — handles 429/5xx/401 errors silently. Three-layer fallback ensures your request never fails.",
+    "features.protocol.title": "Protocol Adapter",
+    "features.protocol.desc": "Seamless conversion between Anthropic and OpenAI formats. Use Claude Code with OpenAI-compatible providers, or vice versa.",
+    "features.stats.title": "Real-time Analytics",
+    "features.stats.desc": "Track daily token usage and estimated costs with 30-day history. Know exactly where your API budget goes.",
+    "features.privacy.title": "Privacy First",
+    "features.privacy.desc": "100% local execution. API keys stored in macOS Keychain. No telemetry, no cloud sync, no third-party servers.",
+    "features.providers.title": "42+ Providers Built-in",
+    "features.providers.desc": "Pre-configured metadata for DeepSeek, OpenAI, Anthropic, Aliyun, MiniMax, and more. One-click setup via providers.json.",
+    "features.zero.title": "Zero Client Config",
+    "features.zero.desc": "Just set ANTHROPIC_BASE_URL. Claude Code and other clients work out of the box — no plugins, no wrappers, no config files.",
+    "why.badge": "Why SmartLLMRouter",
+    "why.title": "Not Just Another Proxy",
+    "why.subtitle": "See how SmartLLMRouter compares to other solutions.",
+    "why.col.slr": "SmartLLMRouter",
+    "why.col.cloud": "Cloud Proxies",
+    "why.col.oss": "Other OSS",
+    "why.row.size": "Binary Size",
+    "why.row.native": "macOS Native",
+    "why.row.privacy": "Privacy",
+    "why.row.failover": "Auto-Failover",
+    "why.row.protocol": "Protocol Conversion",
+    "why.row.keys": "Key Storage",
+    "why.row.setup": "Setup Time",
+    "usecases.badge": "Use Cases",
+    "usecases.title": "Built for Real Workflows",
+    "usecase.1.title": "Claude Code × Multi-Provider",
+    "usecase.1.desc": "Use multiple API keys for the same model. When DeepSeek hits rate limits, the proxy silently switches to Nvidia or Sensenova — same model, different provider.",
+    "usecase.2.title": "Rate Limit Failover",
+    "usecase.2.desc": "When a provider returns 429, the circuit breaker trips and the request automatically retries with the next priority provider. You see no interruption.",
+    "usecase.3.title": "Context Length Fallback",
+    "usecase.3.desc": "When a request exceeds a model's context window, SmartLLMRouter intelligently routes to a compatible model with larger capacity — like from gpt-4o (128K) to gpt-4.1 (1M).",
+    "usecase.4.title": "Local + Cloud Hybrid",
+    "usecase.4.desc": "Run local models (Ollama, vLLM) alongside cloud APIs. SmartLLMRouter unifies them behind a single endpoint — one URL serves all models.",
+    "arch.badge": "Architecture",
+    "arch.title": "How It Works",
+    "cta.title": "Ready to Simplify Your LLM Workflow?",
+    "cta.subtitle": "Free · Open Source · macOS 13+ · Apple Silicon & Intel",
+    "cta.download": "Download Latest",
+    "cta.github": "Star on GitHub",
+    "footer.copy": "© 2025–2026 SmartLLMRouter"
+  }
+};
+
+let currentLang = 'zh';
+
+function toggleLang() {
+  currentLang = currentLang === 'zh' ? 'en' : 'zh';
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (i18n[currentLang] && i18n[currentLang][key]) {
+      el.textContent = i18n[currentLang][key];
+    }
+  });
+  // Update lang switch button
+  document.getElementById('langZh').className = currentLang === 'zh' ? 'active-lang' : '';
+  document.getElementById('langEn').className = currentLang === 'en' ? 'active-lang' : '';
+}
+
+// Set initial state
+document.getElementById('langZh').className = 'active-lang';
+</script>
 </body>
 </html>
