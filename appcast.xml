@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>SmartLLMRouter</title>
+        <item>
+            <title>1.0.1-alpha.6</title>
+            <pubDate>Fri, 10 Jul 2026 09:06:13 +0000</pubDate>
+            <link>https://github.com/rickytan/SmartLLMRouter</link>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.1-alpha.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/rickytan/SmartLLMRouter/releases/download/SmartLLMRouter-1.0.1-alpha.6.dmg" length="3446608" type="application/octet-stream" sparkle:edSignature="F/coSSHL9sBJLdE2mMpYLF5/4xzIeXuUrFJHpfGCO/8VCo+hYSF+BEIZ/B91MI8tMLuoWBMrcSaHcRKo6Qt4AQ=="/>
+        </item>
+    </channel>
+</rss>
