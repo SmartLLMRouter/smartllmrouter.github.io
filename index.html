@@ -4,7 +4,61 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="SmartLLMRouter — 轻量级 macOS 本地 LLM API 代理，支持 42+ 提供商智能路由、自动故障转移与协议转换。Privacy-first, 100% local.">
+  <meta name="keywords" content="LLM proxy, macOS, Claude Code, API router, DeepSeek, OpenAI, Anthropic, failover, privacy, local proxy">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://smartllmrouter.github.io/">
+  <link rel="icon" type="image/png" href="icon.png">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://smartllmrouter.github.io/">
+  <meta property="og:title" content="SmartLLMRouter — Smart LLM API Router for macOS">
+  <meta property="og:description" content="A lightweight macOS menu bar proxy that intelligently routes LLM API requests across 42+ providers with automatic failover, protocol conversion, and real-time analytics.">
+  <meta property="og:image" content="https://smartllmrouter.github.io/og-image.png">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="1024">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:locale:alternate" content="en_US">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SmartLLMRouter — Smart LLM API Router">
+  <meta name="twitter:description" content="macOS menu bar proxy for 42+ LLM providers. Auto-failover, protocol conversion, privacy-first.">
+  <meta name="twitter:image" content="https://smartllmrouter.github.io/icon.png">
   <title>SmartLLMRouter — 智能 LLM API 路由代理</title>
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="zh-CN" href="https://smartllmrouter.github.io/">
+  <link rel="alternate" hreflang="en" href="https://smartllmrouter.github.io/">
+  <link rel="alternate" hreflang="x-default" href="https://smartllmrouter.github.io/">
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "SmartLLMRouter",
+    "description": "A lightweight macOS menu bar proxy that intelligently routes LLM API requests across 42+ providers with automatic failover, protocol conversion, and real-time usage analytics.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS 13.0+",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "softwareVersion": "1.0.1",
+    "featureList": [
+      "Multi-Provider Support (42+ LLM providers)",
+      "Smart Auto-Failover with Circuit Breaker",
+      "Protocol Adapter (Anthropic ↔ OpenAI)",
+      "Real-time Token Usage Analytics",
+      "Config Export & Import with AES-GCM Encryption",
+      "Sparkle Auto-Update",
+      "100% Local, Privacy-First"
+    ],
+    "url": "https://smartllmrouter.github.io/",
+    "downloadUrl": "https://github.com/rickytan/SmartLLMRouter/releases/latest",
+    "codeRepository": "https://github.com/rickytan/SmartLLMRouter",
+    "license": "https://github.com/rickytan/SmartLLMRouter/blob/main/LICENSE"
+  }
+  </script>
   <style>
     /* ========== Reset & Base ========== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -232,13 +286,14 @@
 <!-- Nav -->
 <nav>
   <div class="container">
-    <div class="nav-brand"><span class="icon">⚡</span> SmartLLMRouter</div>
+    <div class="nav-brand"><img src="icon.png" alt="SmartLLMRouter" style="width:28px;height:28px;border-radius:6px;"> SmartLLMRouter</div>
     <div class="nav-links">
       <a href="#features" data-i18n="nav.features">Features</a>
       <a href="#why" data-i18n="nav.why">Why Us</a>
       <a href="#usecases" data-i18n="nav.usecases">Use Cases</a>
       <a href="#architecture" data-i18n="nav.arch">Architecture</a>
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter" data-i18n="nav.github">GitHub</a>
+      <a href="#sharing" data-i18n="nav.sharing">Sharing</a>
+      <a href="https://github.com/rickytan/SmartLLMRouter" data-i18n="nav.github">GitHub</a>
     </div>
     <button class="lang-switch" onclick="toggleLang()" id="langBtn">
       <span class="active-lang" id="langZh">中</span> / <span id="langEn">EN</span>
@@ -253,8 +308,8 @@
     <h1 class="animate delay-1" data-i18n="hero.title">Smart LLM API Router</h1>
     <p class="animate delay-2" data-i18n="hero.subtitle">A lightweight macOS menu bar proxy that intelligently routes LLM API requests across 42+ providers with automatic failover, protocol conversion, and real-time usage analytics — all running locally on your Mac.</p>
     <div class="hero-buttons animate delay-3">
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/releases/latest" class="btn btn-primary">⬇ <span data-i18n="hero.download">Download for macOS</span></a>
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter" class="btn btn-outline"><span data-i18n="hero.github">View on GitHub</span> →</a>
+      <a href="https://github.com/rickytan/SmartLLMRouter/releases/latest" class="btn btn-primary">⬇ <span data-i18n="hero.download">Download for macOS</span></a>
+      <a href="https://github.com/rickytan/SmartLLMRouter" class="btn btn-outline"><span data-i18n="hero.github">View on GitHub</span> →</a>
     </div>
     <div class="stats animate delay-3">
       <div class="stat"><div class="stat-value">42+</div><div class="stat-label" data-i18n="stat.providers">LLM Providers</div></div>
@@ -303,6 +358,11 @@
         <span class="feature-icon">⚡</span>
         <h3 data-i18n="features.zero.title">Zero Client Config</h3>
         <p data-i18n="features.zero.desc">Just set ANTHROPIC_BASE_URL. Claude Code and other clients work out of the box — no plugins, no wrappers, no config files.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📤</span>
+        <h3 data-i18n="features.share.title">One-Click Config Sharing</h3>
+        <p data-i18n="features.share.desc">Export all channels with optional encryption and share with colleagues. One-click import — no manual re-entry. API keys encrypted, never visible.</p>
       </div>
     </div>
   </div>
@@ -444,14 +504,53 @@
   </div>
 </section>
 
+<!-- Config Sharing -->
+<section id="sharing">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge" data-i18n="sharing.badge">Team Workflow</div>
+      <h2 data-i18n="sharing.title">Share Configs, Not Secrets</h2>
+      <p data-i18n="sharing.subtitle">Export your entire channel setup with one click. Share with teammates — they import in one click. Optional encryption keeps API keys safe.</p>
+    </div>
+    <div class="usecase">
+      <div class="usecase-content">
+        <div class="usecase-number">📤</div>
+        <h3 data-i18n="sharing.export.title">Export with Confidence</h3>
+        <p data-i18n="sharing.export.desc">Select channels → Choose encryption (optional) → Save file. All provider configs, model lists, prices, and context lengths are preserved. API keys are encrypted with your password or excluded entirely.</p>
+      </div>
+      <div class="usecase-graphic">
+        <div class="flow-nodes">
+          <span class="flow-node sender">⚙ Channels</span><span class="flow-arrow">→</span>
+          <span class="flow-node proxy">🔐 Encrypt</span><span class="flow-arrow">→</span>
+          <span class="flow-node provider">📁 .json</span>
+        </div>
+      </div>
+    </div>
+    <div class="usecase reverse">
+      <div class="usecase-graphic">
+        <div class="flow-nodes">
+          <span class="flow-node provider">📁 Import File</span><span class="flow-arrow">→</span>
+          <span class="flow-node proxy">🔓 Decrypt</span><span class="flow-arrow">→</span>
+          <span class="flow-node sender">✅ Ready</span>
+        </div>
+      </div>
+      <div class="usecase-content">
+        <div class="usecase-number">📥</div>
+        <h3 data-i18n="sharing.import.title">One-Click Import</h3>
+        <p data-i18n="sharing.import.desc">Drop the exported file → Enter password (if encrypted) → Preview what will be imported → Done. Duplicate detection prevents overwriting existing configs. All channels, models, and metadata are restored instantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="cta">
   <div class="container">
     <h2 data-i18n="cta.title">Ready to Simplify Your LLM Workflow?</h2>
     <p data-i18n="cta.subtitle">Free · Open Source · macOS 13+ · Apple Silicon &amp; Intel</p>
     <div class="hero-buttons">
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/releases/latest" class="btn btn-primary">⬇ <span data-i18n="cta.download">Download Latest</span></a>
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter" class="btn btn-ghost"><span data-i18n="cta.github">Star on GitHub</span> ☆</a>
+      <a href="https://github.com/rickytan/SmartLLMRouter/releases/latest" class="btn btn-primary">⬇ <span data-i18n="cta.download">Download Latest</span></a>
+      <a href="https://github.com/rickytan/SmartLLMRouter" class="btn btn-ghost"><span data-i18n="cta.github">Star on GitHub</span> ☆</a>
     </div>
   </div>
 </section>
@@ -459,11 +558,12 @@
 <!-- Footer -->
 <footer>
   <div class="container">
-    <div class="nav-brand"><span class="icon">⚡</span> SmartLLMRouter</div>
+    <div class="nav-brand"><img src="icon.png" alt="SmartLLMRouter" style="width:28px;height:28px;border-radius:6px;"> SmartLLMRouter</div>
     <div class="footer-links">
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter">GitHub</a>
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/releases">Releases</a>
-      <a href="https://github.com/SmartLLMRouter/SmartLLMRouter/blob/main/LICENSE">MIT License</a>
+      <a href="https://github.com/rickytan/SmartLLMRouter">GitHub</a>
+      <a href="https://github.com/rickytan/SmartLLMRouter/releases">Releases</a>
+      <a href="privacy.html" data-i18n="footer.privacy">Privacy</a>
+      <a href="https://github.com/rickytan/SmartLLMRouter/blob/main/LICENSE">MIT License</a>
     </div>
     <span data-i18n="footer.copy">© 2025–2026 SmartLLMRouter</span>
   </div>
@@ -476,6 +576,7 @@ const i18n = {
     "nav.why": "为什么选我们",
     "nav.usecases": "使用场景",
     "nav.arch": "架构",
+    "nav.sharing": "配置分享",
     "nav.github": "GitHub",
     "hero.badge": "macOS 原生 · 42+ 提供商 · 100% 本地",
     "hero.title": "智能 LLM API 路由代理",
@@ -501,6 +602,8 @@ const i18n = {
     "features.providers.desc": "预配置 DeepSeek、OpenAI、Anthropic、阿里云、MiniMax 等元数据。一键配置。",
     "features.zero.title": "零客户端配置",
     "features.zero.desc": "只需设置 ANTHROPIC_BASE_URL。Claude Code 等客户端开箱即用 — 无需插件、无需包装器、无需配置文件。",
+    "features.share.title": "一键配置分享",
+    "features.share.desc": "导出所有通道配置（可选加密），分享给同事。对方一键导入 — 无需手动重新录入。API Key 加密存储，绝不可见。",
     "why.badge": "为什么选择 SmartLLMRouter",
     "why.title": "不仅仅是另一个代理",
     "why.subtitle": "看看 SmartLLMRouter 与其他方案的对比。",
@@ -526,17 +629,26 @@ const i18n = {
     "usecase.4.desc": "本地模型（Ollama、vLLM）与云端 API 并行运行。SmartLLMRouter 将它们统一到一个端点 — 一个 URL 服务所有模型。",
     "arch.badge": "架构",
     "arch.title": "工作原理",
+    "sharing.badge": "团队协作",
+    "sharing.title": "分享配置，不分享密钥",
+    "sharing.subtitle": "一键导出全部通道配置。分享给团队成员 — 对方一键导入。可选加密保护 API Key 安全。",
+    "sharing.export.title": "安心导出",
+    "sharing.export.desc": "选择通道 → 选择加密（可选）→ 保存文件。所有提供商配置、模型列表、价格、上下文长度完整保留。API Key 经密码加密或完全排除。",
+    "sharing.import.title": "一键导入",
+    "sharing.import.desc": "拖入导出文件 → 输入密码（如加密）→ 预览导入内容 → 完成。重复检测防止覆盖已有配置。所有通道、模型和元数据瞬间恢复。",
     "cta.title": "准备好简化你的 LLM 工作流了吗？",
     "cta.subtitle": "免费 · 开源 · macOS 13+ · Apple Silicon & Intel",
     "cta.download": "下载最新版",
     "cta.github": "在 GitHub 上 Star",
-    "footer.copy": "© 2025–2026 SmartLLMRouter"
+    "footer.copy": "© 2025–2026 SmartLLMRouter",
+    "footer.privacy": "隐私政策"
   },
   en: {
     "nav.features": "Features",
     "nav.why": "Why Us",
     "nav.usecases": "Use Cases",
     "nav.arch": "Architecture",
+    "nav.sharing": "Sharing",
     "nav.github": "GitHub",
     "hero.badge": "macOS Native · 42+ Providers · 100% Local",
     "hero.title": "Smart LLM API Router",
@@ -562,6 +674,8 @@ const i18n = {
     "features.providers.desc": "Pre-configured metadata for DeepSeek, OpenAI, Anthropic, Aliyun, MiniMax, and more. One-click setup via providers.json.",
     "features.zero.title": "Zero Client Config",
     "features.zero.desc": "Just set ANTHROPIC_BASE_URL. Claude Code and other clients work out of the box — no plugins, no wrappers, no config files.",
+    "features.share.title": "One-Click Config Sharing",
+    "features.share.desc": "Export all channels with optional encryption and share with colleagues. One-click import — no manual re-entry. API keys encrypted, never visible.",
     "why.badge": "Why SmartLLMRouter",
     "why.title": "Not Just Another Proxy",
     "why.subtitle": "See how SmartLLMRouter compares to other solutions.",
@@ -587,11 +701,19 @@ const i18n = {
     "usecase.4.desc": "Run local models (Ollama, vLLM) alongside cloud APIs. SmartLLMRouter unifies them behind a single endpoint — one URL serves all models.",
     "arch.badge": "Architecture",
     "arch.title": "How It Works",
+    "sharing.badge": "Team Workflow",
+    "sharing.title": "Share Configs, Not Secrets",
+    "sharing.subtitle": "Export your entire channel setup with one click. Share with teammates — they import in one click. Optional encryption keeps API keys safe.",
+    "sharing.export.title": "Export with Confidence",
+    "sharing.export.desc": "Select channels → Choose encryption (optional) → Save file. All provider configs, model lists, prices, and context lengths are preserved. API keys are encrypted with your password or excluded entirely.",
+    "sharing.import.title": "One-Click Import",
+    "sharing.import.desc": "Drop the exported file → Enter password (if encrypted) → Preview what will be imported → Done. Duplicate detection prevents overwriting existing configs. All channels, models, and metadata are restored instantly.",
     "cta.title": "Ready to Simplify Your LLM Workflow?",
     "cta.subtitle": "Free · Open Source · macOS 13+ · Apple Silicon & Intel",
     "cta.download": "Download Latest",
     "cta.github": "Star on GitHub",
-    "footer.copy": "© 2025–2026 SmartLLMRouter"
+    "footer.copy": "© 2025–2026 SmartLLMRouter",
+    "footer.privacy": "Privacy"
   }
 };
 
