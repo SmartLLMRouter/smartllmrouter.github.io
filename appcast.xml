@@ -3,13 +3,13 @@
     <channel>
         <title>SmartLLMRouter</title>
         <item>
-            <title>1.0.1-beta</title>
-            <pubDate>Fri, 10 Jul 2026 18:20:05 +0000</pubDate>
+            <title>1.0.1-beta.2</title>
+            <pubDate>Sat, 11 Jul 2026 08:32:26 +0000</pubDate>
             <link>https://github.com/rickytan/SmartLLMRouter</link>
-            <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>1.0.1-beta</sparkle:shortVersionString>
+            <sparkle:version>311</sparkle:version>
+            <sparkle:shortVersionString>1.0.1-beta.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/rickytan/SmartLLMRouter/releases/download/SmartLLMRouter-1.0.1-beta.dmg" length="3494159" type="application/octet-stream" sparkle:edSignature="63Uy1U+Po7GIyNCRQlwB+vxWbS5rRjfrV8kcOdiHfFgrBs+vIxLLZRs33KJmL1Z22Zt77ohH2DHDicCHfTH1Cw=="/>
+            <enclosure url="https://github.com/rickytan/SmartLLMRouter/releases/download/SmartLLMRouter-1.0.1-beta.2.dmg" length="3497078" type="application/octet-stream" sparkle:edSignature="QaEAzm2Srr+SpYxIPwMyTC6QVn29OFaieEvsMUjv+zU9hlcXzpgXtbGfXAeuqXakb00E8hnhieIAQGJU/rbNAA=="/>
         </item>
     </channel>
 </rss>
